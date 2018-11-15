@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name="ophys",
+    name="wf",
     version="0.1.0",
     url="https://github.com/saharmanavi/wf_analysis",
 

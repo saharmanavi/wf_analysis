@@ -31,7 +31,7 @@ class GetWFDataset(object):
 		# get_session_dataframe()
 		# get_dff_movie()
 		# get_raw_movie()
-		# display_behavior_summary_fig()
+		# display_summary_fig()
 
 
 		'''
@@ -251,7 +251,7 @@ class GetWFDataset(object):
 		return self.raw_movie
 
 	@choose_date
-	def display_behavior_summary_fig(self, date, fig_type):
+	def display_summary_fig(self, date, fig_type):
 		'''fig_type is either beh for behavior summary, or WF for widefield summary'''
 		if fig_type=='beh':
 			manifest_item = 'behavior_summary_fig'

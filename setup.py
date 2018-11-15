@@ -3,7 +3,7 @@ import setuptools
 setuptools.setup(
     name="ophys",
     version="0.1.0",
-    url="http://stash.corp.alleninstitute.org/users/marinag/repos/ophys/browse",
+    url="https://github.com/saharmanavi/wf_analysis",
 
     author="Sahar Manavi",
     author_email="saharm@alleninstitute.org",

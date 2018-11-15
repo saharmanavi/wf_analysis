@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name="wf",
+    name="wf_analysis",
     version="0.1.0",
     url="https://github.com/saharmanavi/wf_analysis",
 
@@ -13,14 +13,7 @@ setuptools.setup(
 
     packages=setuptools.find_packages(),
 
-    # install_requires=[
-    #     'Click',
-    # ],
-
-    # entry_points='''
-    #     [console_scripts]
-    #     summary_csv=braintv_pilot.summary:load_and_save
-    # ''',
+    install_requires=[],
 
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

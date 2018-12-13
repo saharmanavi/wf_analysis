@@ -121,7 +121,7 @@ class GetWFDataset(object):
 						'gcamp_2x' : [f for f in os.listdir(self.path) if ('cam1' not in f) and ('2_2_1' in f) and ('tiff' not in f)], 
 						'hemo_16x' : [f for f in os.listdir(self.path) if ('16_16_1' in f) and ('cam1' in f)],
 						'gcamp_16x' : [f for f in os.listdir(self.path) if ('cam1' not in f) and ('16_16_1' in f)],
-						'behavior_pkl' : [f for f in os.listdir(self.path) if '.pkl' in f],
+						'behavior_pkl' : [f for f in os.listdir(self.path) if ('.pkl' in f) and ('task' in f)],
 						'dff_movie' : [f for f in os.listdir(self.path) if '_dff_' in f],
 						'WF_summary_fig' : [f for f in os.listdir(self.path) if 'summary_figure.png' in f],
 						'behavior_cam' : [f for f in os.listdir(self.path) if '0.avi' in f],

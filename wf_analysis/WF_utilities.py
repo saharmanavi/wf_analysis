@@ -74,4 +74,9 @@ def add_jcam_to_df(df_in,session):
             df_in.loc[idx,'stim_frame_jcam'] = get_jcam_index(session.timeline.times,change_frame)
     return df_in
 
-
+def rad_to_dist(speed_rad_per_s):
+    wheel_diameter = 6.5 * 2.54  # 6.5" wheel diameter
+    running_radius = 0.5 * (2.0 * wheel_diameter / 3.0)  # assume the animal runs at 2/3 the distance from the wheel center
+    c = 2*np.pi*running_radius
+    running_speed_cm_per_sec = speed_rad_per_s * c * (9.5493 / 60.) #convert to revolutions per second, multiply by distance
+    return running_speed_cm_per_sec

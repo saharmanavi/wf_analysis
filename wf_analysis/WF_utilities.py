@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 import six
@@ -80,3 +81,19 @@ def rad_to_dist(speed_rad_per_s):
     c = 2*np.pi*running_radius
     running_speed_cm_per_sec = speed_rad_per_s * c * (9.5493 / 60.) #convert to revolutions per second, multiply by distance
     return running_speed_cm_per_sec
+
+def generate_mouse_manifest(mouse_id, main_dir):
+    folder_list = []
+    for d in os.listdir(main_dir):
+        if (mouse_id.lower() in d.lower()) and ('.json' not in d.lower()):
+            folder_list.append(d)
+    manifest_dict = {}
+    for f in folder_list:
+        if '-' in f:
+            key = f.split('-')[0]
+        elif '_' in f:
+            key = f.split('_')[0]
+        manifest_dict[key] = f
+    date_list = [k for k in manifest_dict.keys()]    
+    
+    return manifest_dict, date_list

@@ -136,7 +136,7 @@ class ProcessWFData(object):
 				dff_movie = BinarySlicer(str(os.path.join(self.path, dff_moviename)))
 		else:
 			print 'Making DFF movie'
-			dff_movie = ut.normalize_movie(self.movie,
+			dff_movie = normalize_movie(self.movie,
 			                           mask_data=False,
 			                           show_progress=True)
 			filename = os.path.join(self.path,dff_moviename)

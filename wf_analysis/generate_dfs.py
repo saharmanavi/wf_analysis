@@ -7,18 +7,18 @@ import numpy as np
 from collections import OrderedDict
 
 from imaging_behavior import load_session_from_manifest
-from WF_utilities import beh_pkl_path_to_df, get_jcam_index, rad_to_dist
+from WF_utilities import beh_pkl_path_to_df, get_jcam_index, rad_to_dist, generate_mouse_manifest
 from visual_behavior.utilities import flatten_list
 
 class AnalysisDataFrames(object):
-	def __init__(self, mouse_id, dates=None, main_dir='default', save=False, run_all=False):
+	def __init__(self, mouse_id, dates, main_dir='default', save=False, run_all=False):
 		if main_dir=='default':
 			self.main_dir = r"\\allen\programs\braintv\workgroups\nc-ophys\CorticalMapping\IntrinsicImageData"
 		else:
 			self.main_dir = main_dir
 		self.mouse_id = mouse_id
-		
-		self.generate_manifest()
+
+		self.manifest_dict, self.date_list = generate_mouse_manifest(self.mouse_id, self.main_dir)
 		self.dates = dates
 		if type(self.dates) is not list:
 			self.dates= [dates]
@@ -34,7 +34,7 @@ class AnalysisDataFrames(object):
 			                 'MISS': 2,
 			                 'FA': 3,
 			                 'CR': 4,
-			                 'AUTOREWARDED': -1,
+			                 'AUTOREWARDED': 99,
 			                 'EARLY_RESPONSE': 0}
 		
 		for d in self.dates:
@@ -42,28 +42,10 @@ class AnalysisDataFrames(object):
 			self.get_session_path(d)
 			self.generate_session_object()
 			self.generate_matrix()
-			self.generate_trial_df()
+			# self.generate_trial_df()
 
 			if save==True:
 				self.save_files(d)
-
-	def generate_manifest(self):
-		folder_list = []
-		for d in os.listdir(self.main_dir):
-			if (self.mouse_id.lower() in d.lower()) and ('.json' not in d.lower()):
-				folder_list.append(d)
-		manifest_dict = {}
-		for f in folder_list:
-			if '-' in f:
-				key = f.split('-')[0]
-			elif '_' in f:
-				key = f.split('_')[0]
-			manifest_dict[key] = f
-		date_list = [k for k in manifest_dict.keys()]
-		self.manifest_dict = manifest_dict
-		self.date_list = date_list		
-		
-		return self.manifest_dict, self.date_list
 
 	def get_session_path(self, date):
 		path = os.path.join(self.main_dir, self.manifest_dict[date], 'DoC')
@@ -89,7 +71,7 @@ class AnalysisDataFrames(object):
 		    for o in self.ori_dict[k]:
 		        fixed_dict[o] = k
 		stimlog = pd.DataFrame.from_dict(pkl['stimuluslog'])
-		stimlog['cam_time'] = np.round(self.session.timeline.values['frame_display_times'], 2)
+		stimlog['cam_frame'] = get_jcam_index(self.session.timeline.times, stimlog['frame'])
 		if len(stimlog.image_name.unique()) > 1:
 		    ori_col = 'image_name'
 		else:
@@ -128,7 +110,10 @@ class AnalysisDataFrames(object):
 				for r in rew_frames:
 					reward = get_jcam_index(self.session.timeline.times,r)
 					rewards.append(reward)     
-				trial_df.at[idx, 'jcam_rew_frame'] = rewards	
+				trial_df.at[idx, 'jcam_rew_frame'] = rewards
+
+			if trial_df.at[idx, 'trial_type']=='autorewarded':
+				trial_df.at[idx, 'response_type'] = 'AUTOREWARDED'	
 
 		reward_df = pd.DataFrame()
 		reward_df['rew_frames'] = flatten_list(list(trial_df['jcam_rew_frame']))
@@ -146,10 +131,13 @@ class AnalysisDataFrames(object):
 		matrix = matrix.merge(lick_df, left_on='cam_frame', right_on='lick_frames', how='left')
 		matrix = matrix.groupby(['cam_frame', 'cam_time']).count()[['jcam_start_frame', 'jcam_change_frame', 'rew_frames', 'lick_frames']].reset_index()
 		matrix = matrix.merge(trial_df[['response_type', 'jcam_start_frame', 'trial_number']], left_on='cam_frame', right_on='jcam_start_frame', how='left').drop('jcam_start_frame_y', 1)
-		matrix = matrix.merge(stimlog[['state', 'frame', 'cam_time', 'image_id']], on='cam_time', how='left')
+		matrix = matrix.merge(stimlog[['state', 'frame', 'cam_frame', 'image_id']], on='cam_frame', how='left')
 		matrix = matrix.merge(run_df, on='cam_time', how='left')
 
 		matrix[['state', 'frame', 'response_type', 'trial_number', 'image_id']] = matrix[['state', 'frame', 'response_type', 'trial_number', 'image_id']].fillna(method='ffill')
+
+		# self.matrix = matrix
+		# return self.matrix
 
 		beh_start = matrix[matrix.frame==0].index[0]
 		matrix.loc[beh_start:, ['state', 'image_id']] = matrix.loc[beh_start:, ['state', 'image_id']].astype(int)
@@ -212,7 +200,7 @@ class AnalysisDataFrames(object):
 		pd.to_pickle(self.session, os.path.join(self.path, 
 											"{}_{}_session_object.pkl".format(date, self.mouse_id)))
 		pd.to_pickle(self.matrix, os.path.join(self.path, 
-											"{}_{}_matrix_df.pkl".format(date, self.mouse_id)))
+											"{}_{}_DoC_matrix_df.pkl".format(date, self.mouse_id)))
 		pd.to_pickle(self.trial_df, os.path.join(self.path, 
-											"{}_{}_trial_df.pkl".format(date, self.mouse_id)))
+											"{}_{}_DoC_trial_df.pkl".format(date, self.mouse_id)))
 		print 'Files for {} on {} saved at {}.'.format(self.mouse_id, date, self.path)

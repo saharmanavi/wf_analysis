@@ -48,7 +48,8 @@ def beh_pkl_path_to_df(path):
 
 def get_jcam_index(times,visual_frame):
     """
-    Given a dictionary of times from the session object and an input visual frame, this will return the nearest jcam frame
+    Given a dictionary of times from the session object and an input visual frame, 
+    this will return the nearest jcam frame
     modified from imaging_behavior.core.utilities
     """
     #use the "frame display times" to account for display lag

@@ -77,51 +77,166 @@ def concat_all_chunks(output_file, chunks_loc, length):
     del dset
 
 
-if __name__ == "__main__":
-    xfer_loc = r"\\allen\programs\braintv\workgroups\nc-ophys\Sahar\181017-M395929"
-    hzs = [20, 100]
+def full_method(date, mouse, raw_movie_path, spatial_compression, temporal_compression, suffix=False, create=True, xfer=True):
+    if suffix is not None:
+        label = "{}_{}_{}".format(date, mouse, suffix)
+    else:
+        label = "{}_{}".format(date, mouse)
 
-    for hz in hzs:
-        file_name = "181017_M395929_256x256_{}hz.h5".format(hz)
-        output_file = os.path.join(xfer_loc, file_name)
-        chunks_name = "decimated_chunks_{}hz".format(hz)
-        chunks_loc = os.path.join(r"C:\Users\saharm\Desktop\movie_folder", chunks_name)
-        length = int(hz/100.*362000)
-        print "starting {}".format(file_name)
-        concat_all_chunks(output_file, chunks_loc, length)
-    
-
-
-
-
-
-
-    path = r"C:\Users\saharm\Desktop\movie_folder\181017JCamF_cam2_200.dcimg_2_2_1.h5"
-    f = h5py.File(path, 'r+')
+    f = h5py.File(raw_movie_path, 'r+')
     h = f['data']
+    movie_len = h.shape[0]
+    chunks = np.arange(0,movie_len,10000)
+
+    local_dir = os.path.join(r"C:\Users\saharm\Desktop\movie_folder", "decimated_chunks_{}".format(label))
+        
+
+    if create==True:
+        if os.path.exists(local_dir)==False:
+            os.makedirs(local_dir)
+
+        for n, c in enumerate(chunks):
+            print 'making array {}'.format(n)
+            try:
+                v1 = h[chunks[n]:chunks[n+1], :, :]
+                output_name = "{}_{}_{}_cam2_256x256_{}hz.h5".format(chunks[n]/tc, chunks[n+1]/tc, label, hz)
+            except IndexError:
+                v1 = h[chunks[n]:, :, :]
+                output_name = "{}_end_{}_cam2_256x256_{}hz.h5".format(chunks[n]/tc, label, hz)
+
+
+            print 'decimating {} of {}'.format(n, len(chunks)-1) 
+            decimate_JCamF(input_array = v1, 
+                            output_file = os.path.join(save_dir, output_name), 
+                            spatial_compression = 2, 
+                            temporal_compression = tc)
+
+            del v1
+        print "=====DONE W/DECIMATION====="
+
+
+if __name__ == "__main__":
     
-    save_dir = r"C:\Users\saharm\Desktop\movie_folder\decimated_chunks_20hz"
-    chunks = np.arange(0,362000,10000)
-    hz = 20
-    tc = int(100./hz)
-
-    for n, c in enumerate(chunks):
-        print 'making array {}'.format(n)
-        try:
-            v1 = h[chunks[n]:chunks[n+1], :, :]
-            output_name = "{}_{}_181017_M395929_cam2_256x256_{}hz.h5".format(chunks[n]/tc, chunks[n+1]/tc, hz)
-        except IndexError:
-            v1 = h[chunks[n]:, :, :]
-            output_name = "{}_end_181017_M395929_cam2_256x256_{}hz.h5".format(chunks[n]/tc, hz)
+    ########################
+    create = True
+    xfer = True
+    date = '181003'
+    mouse = 'M395926_hemo'
+    ########################
 
 
-        print 'decimating {}'.format(n) 
-        decimate_JCamF(input_array = v1, 
-                        output_file = os.path.join(save_dir, output_name), 
-                        spatial_compression = 2, 
-                        temporal_compression = tc)
+    label = "{}_{}".format(date, mouse)
+    if create==True:
+        ########################
+        path = r"C:\Users\saharm\Desktop\movie_folder\181003JCamF_cam1_100.dcimg_2_2_1.h5"       
+        hz = 100
+        ########################
+        
+        save_dir = os.path.join(r"C:\Users\saharm\Desktop\movie_folder", "decimated_chunks_{}hz_{}".format(hz, mouse))
+        if os.path.exists(save_dir)==False:
+            os.makedirs(save_dir)
 
-        del v1
+        f = h5py.File(path, 'r+')
+        h = f['data']
+        chunks = np.arange(0,362000,10000)
+        tc = int(100./hz)
 
-    print "=====DONE W/DECIMATION====="
+        for n, c in enumerate(chunks):
+            print 'making array {}'.format(n)
+            try:
+                v1 = h[chunks[n]:chunks[n+1], :, :]
+                output_name = "{}_{}_{}_cam2_256x256_{}hz.h5".format(chunks[n]/tc, chunks[n+1]/tc, label, hz)
+            except IndexError:
+                v1 = h[chunks[n]:, :, :]
+                output_name = "{}_end_{}_cam2_256x256_{}hz.h5".format(chunks[n]/tc, label, hz)
+
+
+            print 'decimating {} of {}'.format(n, len(chunks)-1) 
+            decimate_JCamF(input_array = v1, 
+                            output_file = os.path.join(save_dir, output_name), 
+                            spatial_compression = 2, 
+                            temporal_compression = tc)
+
+            del v1
+        print "=====DONE W/DECIMATION====="
+
+    if xfer==True:
+        ########################
+        hzs = [100]
+        ########################
+
+        xfer_loc = os.path.join(r"\\allen\programs\braintv\workgroups\nc-ophys\Sahar", label)
+        if os.path.exists(xfer_loc)==False:
+            os.makedirs(xfer_loc)
+        print xfer_loc
+        for hz in hzs:
+            file_name = "{}_256x256_{}hz.h5".format(label, hz)
+            output_file = os.path.join(xfer_loc, file_name)
+            chunks_loc = os.path.join(r"C:\Users\saharm\Desktop\movie_folder", "decimated_chunks_{}hz_{}".format(hz, mouse))
+            length = int(hz/100.*362000)
+            print "starting {}".format(file_name)
+            concat_all_chunks(output_file, chunks_loc, length)
+            print '====={}hz XFER COMPLETE====='.format(hz)    
+
+
+    ########################
+    create = True
+    xfer = True
+    date = '181017'
+    mouse = 'M395929_hemo'
+    ########################
+
+
+    label = "{}_{}".format(date, mouse)
+    if create==True:
+        ########################
+        path = r"C:\Users\saharm\Desktop\movie_folder\181017JCamF_cam1_100.dcimg_2_2_1.h5"      
+        hz = 100
+        ########################
+        
+        save_dir = os.path.join(r"C:\Users\saharm\Desktop\movie_folder", "decimated_chunks_{}hz_{}".format(hz, mouse))
+        if os.path.exists(save_dir)==False:
+            os.makedirs(save_dir)
+
+        f = h5py.File(path, 'r+')
+        h = f['data']
+        chunks = np.arange(0,362000,10000)
+        tc = int(100./hz)
+
+        for n, c in enumerate(chunks):
+            print 'making array {}'.format(n)
+            try:
+                v1 = h[chunks[n]:chunks[n+1], :, :]
+                output_name = "{}_{}_{}_cam2_256x256_{}hz.h5".format(chunks[n]/tc, chunks[n+1]/tc, label, hz)
+            except IndexError:
+                v1 = h[chunks[n]:, :, :]
+                output_name = "{}_end_{}_cam2_256x256_{}hz.h5".format(chunks[n]/tc, label, hz)
+
+
+            print 'decimating {} of {}'.format(n, len(chunks)-1) 
+            decimate_JCamF(input_array = v1, 
+                            output_file = os.path.join(save_dir, output_name), 
+                            spatial_compression = 2, 
+                            temporal_compression = tc)
+
+            del v1
+        print "=====DONE W/DECIMATION====="
+
+    if xfer==True:
+        ########################
+        hzs = [100]
+        ########################
+
+        xfer_loc = os.path.join(r"\\allen\programs\braintv\workgroups\nc-ophys\Sahar", label)
+        if os.path.exists(xfer_loc)==False:
+            os.makedirs(xfer_loc)
+        print xfer_loc
+        for hz in hzs:
+            file_name = "{}_256x256_{}hz.h5".format(label, hz)
+            output_file = os.path.join(xfer_loc, file_name)
+            chunks_loc = os.path.join(r"C:\Users\saharm\Desktop\movie_folder", "decimated_chunks_{}hz_{}".format(hz, mouse))
+            length = int(hz/100.*362000)
+            print "starting {}".format(file_name)
+            concat_all_chunks(output_file, chunks_loc, length)
+            print '====={}hz XFER COMPLETE====='.format(hz)    
 

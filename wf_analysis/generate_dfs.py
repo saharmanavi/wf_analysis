@@ -34,7 +34,7 @@ class AnalysisDataFrames(object):
 			                 'MISS': 2,
 			                 'FA': 3,
 			                 'CR': 4,
-			                 'AUTOREWARDED': 99,
+			                 'AUTOREWARDED': 5,
 			                 'EARLY_RESPONSE': 0}
 		
 		for d in self.dates:

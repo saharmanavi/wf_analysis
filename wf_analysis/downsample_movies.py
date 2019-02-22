@@ -5,6 +5,7 @@ import time
 import numpy as np
 import tables as tb
 import pdb
+from wf_analysis.generate_dfs import AnalysisDataFrames
 
 
 class DownsampleMovies(object):
@@ -150,19 +151,32 @@ class DownsampleMovies(object):
 
 
 if __name__ == "__main__":
-    
-    thing = {'181009_M395929_hemo_blank': r"C:\Users\saharm\Desktop\movie_folder\181009JCamF_cam2_200.dcimg_2_2_1.h5",
-            # '181017_M395929_hemo': r"C:\Users\saharm\Desktop\movie_folder\181017JCamF_cam1_100.dcimg_2_2_1.h5"
-            }
 
-    # for t in thing.keys():
-    # for tc in [1, 5]:
-    DownsampleMovies(name_str = '181009_M395929_hemo_DoC', 
+    
+
+    AnalysisDataFrames('M395926', '180927', save=True)
+
+    vids = {'180927_M392926_gcamp_DoC': r"\\ALLEN\programs\braintv\workgroups\nc-ophys\CorticalMapping\IntrinsicImageData\180927-M395926\DoC\180927JCamF_cam2_200.dcimg_2_2_1.h5",
+            '180927_M392926_hemo_DoC': r"\\ALLEN\programs\braintv\workgroups\nc-ophys\CorticalMapping\IntrinsicImageData\180927-M395926\DoC\180927JCamF_cam1_100.dcimg_2_2_1.h5",
+            '180927_M392926_gcamp_blank': r"\\ALLEN\programs\braintv\workgroups\nc-ophys\CorticalMapping\IntrinsicImageData\180927-M395926\blank\180927JCamF_cam2_201.dcimg_2_2_1.h5",
+            '180927_M392926_hemo_blank': r"\\ALLEN\programs\braintv\workgroups\nc-ophys\CorticalMapping\IntrinsicImageData\180927-M395926\blank\180927JCamF_cam1_101.dcimg_2_2_1.h5"}
+    
+    for v in vids.keys():
+        DownsampleMovies(name_str = v, 
                     spatial_compression=2, 
                     temporal_compression=1, 
-                    raw_movie_path=r"\\ALLEN\programs\braintv\workgroups\nc-ophys\CorticalMapping\IntrinsicImageData\181009-M395929\DoC\181009JCamF_cam1_100.dcimg_2_2_1.h5", 
+                    raw_movie_path=vids[v], 
                     chunk_dir=r"C:\Users\saharm\Desktop\movie_folder", 
-                    final_dir=r"\\allen\programs\braintv\workgroups\nc-ophys\Sahar",
+                    final_dir=r"E:\wf_dataset\180927_M395926",
                     create=True, concat=True)
+
+    DownsampleMovies(name_str = '180927_M392926_gcamp_DoC', 
+            spatial_compression=2, 
+            temporal_compression=5, 
+            raw_movie_path=vids['180927_M392926_gcamp_DoC'], 
+            chunk_dir=r"C:\Users\saharm\Desktop\movie_folder", 
+            final_dir=r"E:\wf_dataset\180927_M395926",
+            create=True, concat=True)
+
 
 

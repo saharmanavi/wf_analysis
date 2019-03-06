@@ -1,3 +1,4 @@
+
 import os
 import h5py
 import shutil
@@ -5,8 +6,7 @@ import time
 import numpy as np
 import tables as tb
 import pdb
-from wf_analysis.generate_dfs import AnalysisDataFrames
-
+from generate_dfs import AnalysisDataFrames
 
 class DownsampleMovies(object):
     def __init__(self, name_str, spatial_compression, temporal_compression, raw_movie_path, chunk_dir, final_dir=None, create=True, concat=True):
@@ -15,26 +15,38 @@ class DownsampleMovies(object):
         self.sc = spatial_compression
         self.tc = temporal_compression
         
-        f = h5py.File(raw_movie_path, 'r+')
-        self.movie = f['data']
-        
-        self.movie_len = self.movie.shape[0]
-        self.movie_size = self.movie.shape[1]
-        self.cam = os.path.split(raw_movie_path)[-1].split('CamF_')[1].split('_')[0]
-
         self.chunk_dir = chunk_dir
         if final_dir is not None:
             self.final_dir = final_dir
         else:
             self.final_dir = self.chunk_dir
-
         self.local_dir = os.path.join(self.chunk_dir, "chunks_{}_tc{}".format(self.label, self.tc))
+
+        f = h5py.File(raw_movie_path, 'r+')
+        self.movie = f['data']
+        try:
+            self.save_one_frame()
+        except UnboundLocalError:
+            pass
+        
+        self.movie_len = self.movie.shape[0]
+        self.movie_size = self.movie.shape[1]
+        self.cam = os.path.split(raw_movie_path)[-1].split('CamF_')[1].split('_')[0]
 
         if create==True:
             self.chunk_it()
         if concat==True:
             self.concat_it()
 
+    def save_one_frame(self, frame=30):
+        if 'gcamp_doc' in self.label:
+            still_frame = np.transpose(self.movie[frame,:,:], (1,0))
+        if 'hemo_doc' in self.label:
+            still_frame = (np.rot90(self.movie[frame,:,:], 1))
+        self.still_frame = still_frame
+        np.save(os.path.join(self.final_dir, '{}_still_frame.npy'.format(self.label)), self.still_frame)
+        print '{} still image saved'.format(self.label)
+        return self.still_frame
 
 
     def chunk_it(self):
@@ -61,10 +73,9 @@ class DownsampleMovies(object):
             del v1
         print "=====DONE W/DECIMATION====="
 
-
     def concat_it(self):
 
-        xfer_loc = os.path.join(self.final_dir, self.label)
+        xfer_loc = os.path.join(self.final_dir)
         if os.path.exists(xfer_loc)==False:
             os.makedirs(xfer_loc)
         
@@ -75,9 +86,7 @@ class DownsampleMovies(object):
         
         print "starting {}".format(file_name)
         self.concat_all_chunks(output_file, chunks_loc, length)
-        print '====={} XFER COMPLETE====='.format(self.label)    
-
-
+        print '====={} XFER COMPLETE====='.format(self.label)   
 
     def decimate_JCamF(self, input_array, output_file, spatial_compression, temporal_compression):
 
@@ -150,33 +159,33 @@ class DownsampleMovies(object):
 
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
     
 
-    AnalysisDataFrames('M395926', '180927', save=True)
+#     AnalysisDataFrames('M395926', '180927', save=True)
 
-    vids = {'180927_M392926_gcamp_DoC': r"\\ALLEN\programs\braintv\workgroups\nc-ophys\CorticalMapping\IntrinsicImageData\180927-M395926\DoC\180927JCamF_cam2_200.dcimg_2_2_1.h5",
-            '180927_M392926_hemo_DoC': r"\\ALLEN\programs\braintv\workgroups\nc-ophys\CorticalMapping\IntrinsicImageData\180927-M395926\DoC\180927JCamF_cam1_100.dcimg_2_2_1.h5",
-            '180927_M392926_gcamp_blank': r"\\ALLEN\programs\braintv\workgroups\nc-ophys\CorticalMapping\IntrinsicImageData\180927-M395926\blank\180927JCamF_cam2_201.dcimg_2_2_1.h5",
-            '180927_M392926_hemo_blank': r"\\ALLEN\programs\braintv\workgroups\nc-ophys\CorticalMapping\IntrinsicImageData\180927-M395926\blank\180927JCamF_cam1_101.dcimg_2_2_1.h5"}
+#     vids = {'180927_M392926_gcamp_DoC': r"\\ALLEN\programs\braintv\workgroups\nc-ophys\CorticalMapping\IntrinsicImageData\180927-M395926\DoC\180927JCamF_cam2_200.dcimg_2_2_1.h5",
+#             '180927_M392926_hemo_DoC': r"\\ALLEN\programs\braintv\workgroups\nc-ophys\CorticalMapping\IntrinsicImageData\180927-M395926\DoC\180927JCamF_cam1_100.dcimg_2_2_1.h5",
+#             '180927_M392926_gcamp_blank': r"\\ALLEN\programs\braintv\workgroups\nc-ophys\CorticalMapping\IntrinsicImageData\180927-M395926\blank\180927JCamF_cam2_201.dcimg_2_2_1.h5",
+#             '180927_M392926_hemo_blank': r"\\ALLEN\programs\braintv\workgroups\nc-ophys\CorticalMapping\IntrinsicImageData\180927-M395926\blank\180927JCamF_cam1_101.dcimg_2_2_1.h5"}
     
-    for v in vids.keys():
-        DownsampleMovies(name_str = v, 
-                    spatial_compression=2, 
-                    temporal_compression=1, 
-                    raw_movie_path=vids[v], 
-                    chunk_dir=r"C:\Users\saharm\Desktop\movie_folder", 
-                    final_dir=r"E:\wf_dataset\180927_M395926",
-                    create=True, concat=True)
+#     for v in vids.keys():
+#         DownsampleMovies(name_str = v, 
+#                     spatial_compression=2, 
+#                     temporal_compression=1, 
+#                     raw_movie_path=vids[v], 
+#                     chunk_dir=r"C:\Users\saharm\Desktop\movie_folder", 
+#                     final_dir=r"E:\wf_dataset\180927_M395926",
+#                     create=True, concat=True)
 
-    DownsampleMovies(name_str = '180927_M392926_gcamp_DoC', 
-            spatial_compression=2, 
-            temporal_compression=5, 
-            raw_movie_path=vids['180927_M392926_gcamp_DoC'], 
-            chunk_dir=r"C:\Users\saharm\Desktop\movie_folder", 
-            final_dir=r"E:\wf_dataset\180927_M395926",
-            create=True, concat=True)
+#     DownsampleMovies(name_str = '180927_M392926_gcamp_DoC', 
+#             spatial_compression=2, 
+#             temporal_compression=5, 
+#             raw_movie_path=vids['180927_M392926_gcamp_DoC'], 
+#             chunk_dir=r"C:\Users\saharm\Desktop\movie_folder", 
+#             final_dir=r"E:\wf_dataset\180927_M395926",
+#             create=True, concat=True)
 
 
 

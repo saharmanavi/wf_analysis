@@ -1,16 +1,15 @@
 import os
 import shutil
-import h5py
 import numpy as np
+import glob2
+import time
 from generate_dfs import AnalysisDataFrames
-from cam2_downsample_movies import decimate_JCamF, concat_all_chunks
+from downsample_movies import DownsampleMovies
 from WF_utilities import generate_mouse_manifest
-
-
 
 class FancyDataPackage(object):
 	def __init__(self, mouse_id, dates, xfer_dir, start_dir='default', run_all=False):
-
+		self.t0=time.time()
 		self.mouse_id = mouse_id
 		self.xfer_dir = xfer_dir
 		if start_dir=='default':
@@ -20,119 +19,103 @@ class FancyDataPackage(object):
 
 		self.manifest_dict, self.date_list = generate_mouse_manifest(self.mouse_id, self.start_dir)
 		self.dates = dates
+		if run_all==True:
+			self.dates = self.date_list		
 		if type(self.dates) is not list:
 			self.dates = [dates]
-		if run_all==True:
-			self.dates = self.date_list
 
 		for d in self.dates:
 			self.date = d
+			print 'starting {} {}'.format(self.mouse_id, self.date)
 			self.create_folders()
-			#for DoC
-			self.sess_type = "DoC"
 			self.sess = AnalysisDataFrames(mouse_id = self.mouse_id,
 											dates = self.date,
 											main_dir = self.start_dir,
 											save = True)
-			self.session_path = self.sess.session_path
-			
-			self.find_2x_movie()
-			self.chunks = np.arange(0, self.movie_2x.shape[0], 10000)
+			print 'dataframes took {} seconds to make'.format(time.time()-self.t0)
+			self.session_path = os.path.split(self.sess.path)[0]
+			self.find_movies()
+			self.downsample_movies()
+			self.xfer_del_files(self.session_path)
 
-			self.downsample_movie()
-			self.concatinate_movie_chunks()
+		print "the whole process took {} seconds".format(time.time()-self.t0)
 
+	def create_folders(self):
+		folder_name = "{}_{}".format(self.date, self.mouse_id)
+		folder = os.path.join(self.xfer_dir, folder_name)
+		if not os.path.exists(folder):
+		    os.makedirs(folder)
 
+		chunk_dir = os.path.join(r"C:\Users\saharm\Desktop\movie_folder", '{}_{}'.format(self.date, self.mouse_id))
+		self.folder = folder
+		self.chunk_dir = chunk_dir
+		return self.folder, self.chunk_dir
 
-		def create_folders(self):
-			folder_name = "{}-{}".format(self.date, self.mouse_id)
-			folder = os.path.join(self.xfer_dir, folder_name)
-		    if not os.path.exists(folder):
-		        os.makedirs(folder)
+	def find_movies(self):
+		movie_dict = {
+					'{}_{}_gcamp_doc'.format(self.date, self.mouse_id): glob2.glob(os.path.join(self.session_path, 'DoC', "*cam2*2_2_1.h5"))[0],
+					'{}_{}_hemo_doc'.format(self.date, self.mouse_id): glob2.glob(os.path.join(self.session_path, 'DoC', "*cam1*2_2_1.h5"))[0],
+					'{}_{}_gcamp_blank'.format(self.date, self.mouse_id): glob2.glob(os.path.join(self.session_path, 'blank', "*cam2*2_2_1.h5"))[0],
+					'{}_{}_hemo_blank'.format(self.date, self.mouse_id): glob2.glob(os.path.join(self.session_path, 'blank', "*cam1*2_2_1.h5"))[0],
+					}
+		self.movie_dict = movie_dict
+		return self.movie_dict
 
-		    self.folder = folder
-		    return self.folder
-
-		def find_2x_movie(self):
-			for f in os.listdir(self.session_path):
-				# if "2_2_1.npy" in f:
-				# 	movie_loc = os.path.join(self.session_path, f)
-				#	movie_2x = np.load(movie_loc)
-				#check if that's correct
-				if ("2_2_1.h5" in f) and ("cam2" in f):
-					movie_loc = os.path.join(self.session_path, f)
-					m = h5py.File(movie_loc, 'r')
-					movie_2x = m['data']
-				
-				self.movie_2x = movie_2x
-				return self.movie_2x
-
-		def downsample_movie(self, hzs=[20,100]):
-			chunk_folders = []
-			for hz in hzs:
-				tc = int(100./hz)
-
-				temp_path = os.path.join(r"C:\\some_local_path", self.sess_type, "hz={}".format(hz))
-				chunk_folders.append(temp_path)
-
-				for n, c in enumerate(self.chunks):
-			        try:
-			            v1 = h[self.chunks[n]:self.chunks[n+1], :, :]
-			            output_name = "{}_{}_{}_{}_{}_256x256_{}hz.h5".format(self.chunks[n]/tc, self.chunks[n+1]/tc, self.date, self.mouse_id, self.sess_type, hz)
-			        except IndexError:
-			            v1 = h[self.chunks[n]:, :, :]
-			            output_name = "{}_end_{}_{}_{}_256x256_{}hz.h5".format(self.chunks[n]/tc, self.date, self.mouse_id, self.sess_type, hz)
-
-			        print 'decimating {}'.format(n) 
-			        decimate_JCamF(input_array = v1, 
-			                        output_file = os.path.join(temp_path, output_name), 
-			                        spatial_compression = 2, 
-			                        temporal_compression = tc)
-			    	del v1
-
-			    if hz == 20:
-					for f in os.listdir(temp_path):
-						s = int(f.split("_")[0])/5
-						try:
-							e = int(f.split("_")[1])/5
-						except ValueError:
-							e = "end"
-						os.rename(os.path.join(temp_path,f), os.path.join(temp_path,"{}_{}_{}_{}_{}_256x256_20hz.h5".format(s, e, self.date, self.mouse_id, self.sess_type)))
-
-			        
-			self.chunk_folders = chunk_folders
-			return self.chunk_folders
-
-		def concatinate_movie_chunks(self):
-			for fol in self.chunk_folders:
-				hz = int(os.path.split(fol)[0].split("=")[1])
-				file_name = "{}_{}_{}_256x256_{}hz.h5".format(self.date, self.mouse_id, self.sess_type, hz)
-				output_file = os.path.join(self.folder, file_name)
-				chunks_loc = fol
-				length = int(self.movie_2x.shape[0] / (100./hz))
-				concat_all_chunks(output_file, chunks_loc, length)
-
-		def xfer_del_files(self):
-			for f in os.listdir(self.session_path):
-				if "matrix" in f:
-					matrix_df = os.path.join(self.session_path, f)
-				if "trial_df" in f:
-					trial_df = os.path.join(self.session_path, f)
-
-			shutil.copy2(matrix_df, self.folder)
-			shutil.copy2(trial_df, self.folder)
-
-			file_20 = os.path.join(self.folder, "{}_{}_{}_256x256_20hz.h5".format(self.date, self.mouse_id, self.sess_type))
-			file_100 = os.path.join(self.folder, "{}_{}_{}_256x256_100hz.h5".format(self.date, self.mouse_id, self.sess_type))
-
-			if os.exists(file_20):
-				fol_20 = [cf for cf in self.chunk_folders if "20hz" in cf][0]
-				shutil.rmtree(fol_20)
-			if os.exists(file_100):
-				fol_100 = [cf for cf in self.chunk_folders if "100hz" in cf][0]
-				shutil.rmtree(fol_100)			
+	def downsample_movies(self):
+		for k in self.movie_dict.keys():
+			print 'downsampling {} 100hz'.format(k)
+			DownsampleMovies(name_str = k,
+							spatial_compression = 2, 
+		                    temporal_compression = 1, 
+		                    raw_movie_path = self.movie_dict[k], 
+		                    chunk_dir = self.chunk_dir,
+		                    final_dir = self.folder,
+		                    create=True, concat=True)
+			print "{} took {} seconds to make".format(k, time.time()-self.t0)
 
 
+			if 'gcamp' in k:
+				print 'downsampling {} 20hz'.format(k)
+				DownsampleMovies(name_str = k,
+								spatial_compression = 2, 
+				                temporal_compression = 5, 
+				                raw_movie_path = self.movie_dict[k], 
+				                chunk_dir = self.chunk_dir,
+				                final_dir = self.folder,
+				                create=True, concat=True)
+				print "{} took {} seconds to make".format(k, time.time()-self.t0)
+
+		
+	def xfer_del_files(self, location):
+		print 'xferring files'
+		shutil.copy2(glob2.glob(os.path.join(location, "*doc_matrix_df.csv"))[0], self.folder)
+		shutil.copy2(glob2.glob(os.path.join(location, "*blank_matrix_df.csv"))[0], self.folder)
+		shutil.copy2(glob2.glob(os.path.join(location, "*blank_hemo_movie_time*"))[0], self.folder)
+		shutil.copy2(glob2.glob(os.path.join(location, "*doc_hemo_movie_time*"))[0], self.folder)
+		
+		shutil.copy2(glob2.glob(os.path.join(location, "DoC", "*cam2*16_16_1.h5"))[0], self.folder)
+		shutil.copy2(glob2.glob(os.path.join(location, "DoC", "*cam2*16_16_1_dff_rolling_gaussian.h5"))[0], self.folder)
+
+		try:
+			shutil.copy2(glob2.glob(os.path.join(location, "**", "*WF_summary_figure.png"))[0], self.folder)
+			shutil.copy2(glob2.glob(os.path.join(location, "**", "*task=*.png"))[0], self.folder)
+		except:
+			pass
+		if os.path.exists(self.chunk_dir):
+			shutil.rmtree(self.chunk_dir)
+		print 'all files in {}:'.format(self.folder)
+		for f in os.listdir(self.folder):
+			print f
+	
+
+if __name__ == "__main__":
+	FancyDataPackage(mouse_id = 'M395926', 
+					dates = '180925', 
+					xfer_dir = r"E:\wf_dataset", 
+					start_dir='default', 
+					run_all=False)
+
+	
 
 
 

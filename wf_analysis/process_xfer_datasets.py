@@ -94,7 +94,7 @@ class FancyDataPackage(object):
 		shutil.copy2(glob2.glob(os.path.join(location, "*doc_hemo_movie_time*"))[0], self.folder)
 		
 		shutil.copy2(glob2.glob(os.path.join(location, "DoC", "*cam2*16_16_1.h5"))[0], self.folder)
-		shutil.copy2(glob2.glob(os.path.join(location, "DoC", "*cam2*16_16_1_dff_rolling_gaussian.h5"))[0], self.folder)
+		shutil.copy2(glob2.glob(os.path.join(location, "DoC", "*cam2*dff_rolling_gaussian.h5"))[0], self.folder)
 
 		try:
 			shutil.copy2(glob2.glob(os.path.join(location, "**", "*WF_summary_figure.png"))[0], self.folder)
@@ -110,7 +110,7 @@ class FancyDataPackage(object):
 
 if __name__ == "__main__":
 	FancyDataPackage(mouse_id = 'M395926', 
-					dates = ['181010', '181011'], 
+					dates = , 
 					xfer_dir = r"E:\wf_dataset", 
 					start_dir='default', 
 					run_all=False)

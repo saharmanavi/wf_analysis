@@ -110,7 +110,7 @@ class FancyDataPackage(object):
 
 if __name__ == "__main__":
 	FancyDataPackage(mouse_id = 'M395926', 
-					dates = '180925', 
+					dates = ['181010', '181011'], 
 					xfer_dir = r"E:\wf_dataset", 
 					start_dir='default', 
 					run_all=False)

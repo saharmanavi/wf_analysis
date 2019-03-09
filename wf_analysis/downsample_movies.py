@@ -42,7 +42,7 @@ class DownsampleMovies(object):
         if 'gcamp_doc' in self.label:
             still_frame = np.transpose(self.movie[frame,:,:], (1,0))
         if 'hemo_doc' in self.label:
-            still_frame = (np.rot90(self.movie[frame,:,:], 1))
+            still_frame = np.rot90(self.movie[frame,:,:], 1)
         self.still_frame = still_frame
         np.save(os.path.join(self.final_dir, '{}_still_frame.npy'.format(self.label)), self.still_frame)
         print '{} still image saved'.format(self.label)

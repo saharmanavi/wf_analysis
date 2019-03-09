@@ -96,8 +96,11 @@ class FancyDataPackage(object):
 		shutil.copy2(glob2.glob(os.path.join(location, "DoC", "*cam2*16_16_1.h5"))[0], self.folder)
 		shutil.copy2(glob2.glob(os.path.join(location, "DoC", "*cam2*dff_rolling_gaussian.h5"))[0], self.folder)
 
+		shutil.copy2(glob2.glob(os.path.join(location, "DoC", "*JPhys*"))[0], os.path.join(self.folder, "{}JPhysdoc".format(self.date)))
+		shutil.copy2(glob2.glob(os.path.join(location, "blank", "*JPhys*"))[0], os.path.join(self.folder, "{}JPhysblank".format(self.date)))
+
 		try:
-			shutil.copy2(glob2.glob(os.path.join(location, "**", "*WF_summary_figure.png"))[0], self.folder)
+			shutil.copy2(glob2.glob(os.path.join(location, "**", "*WF_summary_figure.png"))[0], )
 			shutil.copy2(glob2.glob(os.path.join(location, "**", "*task=*.png"))[0], self.folder)
 		except:
 			pass
@@ -108,12 +111,12 @@ class FancyDataPackage(object):
 			print f
 	
 
-if __name__ == "__main__":
-	FancyDataPackage(mouse_id = 'M395926', 
-					dates = , 
-					xfer_dir = r"E:\wf_dataset", 
-					start_dir='default', 
-					run_all=False)
+# if __name__ == "__main__":
+# 	FancyDataPackage(mouse_id = 'M395926', 
+# 					dates = , 
+# 					xfer_dir = r"E:\wf_dataset", 
+# 					start_dir='default', 
+# 					run_all=False)
 
 	
 

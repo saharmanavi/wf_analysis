@@ -8,8 +8,7 @@ from downsample_movies import DownsampleMovies
 from WF_utilities import generate_mouse_manifest
 
 class FancyDataPackage(object):
-	def __init__(self, mouse_id, dates, xfer_dir, start_dir='default', run_all=False):
-		self.t0=time.time()
+	def __init__(self, mouse_id, dates, xfer_dir, start_dir='default', run_all=False):		
 		self.mouse_id = mouse_id
 		self.xfer_dir = xfer_dir
 		if start_dir=='default':
@@ -25,6 +24,7 @@ class FancyDataPackage(object):
 			self.dates = [dates]
 
 		for d in self.dates:
+			self.t0=time.time()
 			self.date = d
 			print 'starting {} {}'.format(self.mouse_id, self.date)
 			self.create_folders()
@@ -37,8 +37,8 @@ class FancyDataPackage(object):
 			self.find_movies()
 			self.downsample_movies()
 			self.xfer_del_files(self.session_path)
-
-		print "the whole process took {} seconds".format(time.time()-self.t0)
+			print "processing {} took {} seconds".format(self.date, time.time()-self.t0)
+			print
 
 	def create_folders(self):
 		folder_name = "{}_{}".format(self.date, self.mouse_id)
@@ -64,6 +64,7 @@ class FancyDataPackage(object):
 	def downsample_movies(self):
 		for k in self.movie_dict.keys():
 			print 'downsampling {} 100hz'.format(k)
+			t_movie = time.time()
 			DownsampleMovies(name_str = k,
 							spatial_compression = 2, 
 		                    temporal_compression = 1, 
@@ -71,11 +72,12 @@ class FancyDataPackage(object):
 		                    chunk_dir = self.chunk_dir,
 		                    final_dir = self.folder,
 		                    create=True, concat=True)
-			print "{} took {} seconds to make".format(k, time.time()-self.t0)
+			print "{} took {} seconds to make".format(k, time.time()-t_movie)
 
 
 			if 'gcamp' in k:
 				print 'downsampling {} 20hz'.format(k)
+				t_movie = time.time()
 				DownsampleMovies(name_str = k,
 								spatial_compression = 2, 
 				                temporal_compression = 5, 
@@ -83,7 +85,7 @@ class FancyDataPackage(object):
 				                chunk_dir = self.chunk_dir,
 				                final_dir = self.folder,
 				                create=True, concat=True)
-				print "{} took {} seconds to make".format(k, time.time()-self.t0)
+				print "{} took {} seconds to make".format(k, time.time()-t_movie)
 
 		
 	def xfer_del_files(self, location):

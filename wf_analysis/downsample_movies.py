@@ -26,7 +26,7 @@ class DownsampleMovies(object):
         self.movie = f['data']
         try:
             self.save_one_frame()
-        except UnboundLocalError:
+        except:
             pass
         
         self.movie_len = self.movie.shape[0]
@@ -39,9 +39,9 @@ class DownsampleMovies(object):
             self.concat_it()
 
     def save_one_frame(self, frame=30):
-        if 'gcamp_doc' in self.label:
+        if ('doc' in self.label) and ('gcamp' in self.label):
             still_frame = np.transpose(self.movie[frame,:,:], (1,0))
-        if 'hemo_doc' in self.label:
+        if ('doc' in self.label) and ('hemo' in self.label):
             still_frame = np.rot90(self.movie[frame,:,:], 1)
         self.still_frame = still_frame
         np.save(os.path.join(self.final_dir, '{}_still_frame.npy'.format(self.label)), self.still_frame)

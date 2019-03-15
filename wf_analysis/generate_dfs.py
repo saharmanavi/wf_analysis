@@ -260,8 +260,11 @@ class AnalysisDataFrames(object):
 
 		#get licks
 		licks_df = fg.load_licks(pkl)
-		time_in_timeline = f(licks_df['frame']) 
-		licks_df['jcam_lick_frame'] = ut.get_nearest_time(rt,time_in_timeline)
+		if len(licks_df) > 0 :
+			time_in_timeline = f(licks_df['frame']) 
+			licks_df['jcam_lick_frame'] = ut.get_nearest_time(rt,time_in_timeline)
+		elif len(licks_df) == 0:
+			licks_df['jcam_lick_frame'] = None
 
 		#get run times/speed
 		running_speed_radians_per_sec = ut.extract_running_speed_jphys(jphys_dict['runningSig'],

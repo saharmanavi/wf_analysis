@@ -87,9 +87,9 @@ class FancyDataPackage(object):
 					                final_dir = self.folder,
 					                create=True, concat=True)
 					print "{} took {} seconds to make".format(k, time.time()-t_movie)
-				except:
-					print 'something went wrong with {}'.format(k)
-					pass
+			except:
+				print 'something went wrong with {}'.format(k)
+				pass
 
 		
 	def xfer_del_files(self, location):

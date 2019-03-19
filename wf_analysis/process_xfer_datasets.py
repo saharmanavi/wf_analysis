@@ -63,29 +63,33 @@ class FancyDataPackage(object):
 
 	def downsample_movies(self):
 		for k in self.movie_dict.keys():
-			print 'downsampling {} 100hz'.format(k)
-			t_movie = time.time()
-			DownsampleMovies(name_str = k,
-							spatial_compression = 2, 
-		                    temporal_compression = 1, 
-		                    raw_movie_path = self.movie_dict[k], 
-		                    chunk_dir = self.chunk_dir,
-		                    final_dir = self.folder,
-		                    create=True, concat=True)
-			print "{} took {} seconds to make".format(k, time.time()-t_movie)
-
-
-			if 'gcamp' in k:
-				print 'downsampling {} 20hz'.format(k)
+			try:
+				print 'downsampling {} 100hz'.format(k)
 				t_movie = time.time()
 				DownsampleMovies(name_str = k,
 								spatial_compression = 2, 
-				                temporal_compression = 5, 
-				                raw_movie_path = self.movie_dict[k], 
-				                chunk_dir = self.chunk_dir,
-				                final_dir = self.folder,
-				                create=True, concat=True)
+			                    temporal_compression = 1, 
+			                    raw_movie_path = self.movie_dict[k], 
+			                    chunk_dir = self.chunk_dir,
+			                    final_dir = self.folder,
+			                    create=True, concat=True)
 				print "{} took {} seconds to make".format(k, time.time()-t_movie)
+
+
+				if 'gcamp' in k:
+					print 'downsampling {} 20hz'.format(k)
+					t_movie = time.time()
+					DownsampleMovies(name_str = k,
+									spatial_compression = 2, 
+					                temporal_compression = 5, 
+					                raw_movie_path = self.movie_dict[k], 
+					                chunk_dir = self.chunk_dir,
+					                final_dir = self.folder,
+					                create=True, concat=True)
+					print "{} took {} seconds to make".format(k, time.time()-t_movie)
+				except:
+					print 'something went wrong with {}'.format(k)
+					pass
 
 		
 	def xfer_del_files(self, location):

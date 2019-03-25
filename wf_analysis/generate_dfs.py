@@ -93,8 +93,8 @@ class AnalysisDataFrames(object):
 		return self.path
 
 	def get_movie_type(self):
-		mov = glob2.glob(os.path.join(self.path, "*rolling_gaussian*"))[0]
-		movie_type = mov.split(".")[-1]
+		mov = [fn for fn in glob2.glob(os.path.join(self.path, "*2_2_1*")) if ".tiff" not in fn]
+		movie_type = mov[0].split(".")[-1]
 		self.movie_type = ".{}".format(movie_type)
 		return self.movie_type
 

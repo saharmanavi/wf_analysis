@@ -103,7 +103,7 @@ class AnalysisDataFrames(object):
 			session = pd.read_pickle(glob2.glob(os.path.join(self.path, "*session_object.pkl"))[0])
 		
 		except:
-			manifest_path = ut.autoGenerateManifest(self.path, filetype=self.movie_type)
+			manifest_path = ut.autoGenerateManifest(self.path, animal_id=self.mouse_id, filetype=self.movie_type)
 			session = load_session_from_manifest(manifest_path)
 			pd.to_pickle(session, os.path.join(self.path, 
 									"{}_{}_session_object.pkl".format(self.date, self.mouse_id)))

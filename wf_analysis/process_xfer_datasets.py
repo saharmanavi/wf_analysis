@@ -30,10 +30,11 @@ class FancyDataPackage(object):
 			self.create_folders()
 			self.sess = AnalysisDataFrames(mouse_id = self.mouse_id,
 											dates = self.date,
-											main_dir = self.start_dir,
-											save = True)
+											main_dir = self.start_dir)
 			print 'dataframes took {} seconds to make'.format(time.time()-self.t0)
-			self.session_path = os.path.split(self.sess.path)[0]
+			self.session_path = self.sess.path
+			if 'DoC' in self.session_path:
+				self.session_path = os.path.split(self.session_path)[0]
 			self.find_movies()
 			self.downsample_movies()
 			self.xfer_del_files(self.session_path)
@@ -52,12 +53,17 @@ class FancyDataPackage(object):
 		return self.folder, self.chunk_dir
 
 	def find_movies(self):
-		movie_dict = {
-					'{}_{}_gcamp_doc'.format(self.date, self.mouse_id): glob2.glob(os.path.join(self.session_path, 'DoC', "*cam2*2_2_1.h5"))[0],
-					'{}_{}_hemo_doc'.format(self.date, self.mouse_id): glob2.glob(os.path.join(self.session_path, 'DoC', "*cam1*2_2_1.h5"))[0],
-					'{}_{}_gcamp_blank'.format(self.date, self.mouse_id): glob2.glob(os.path.join(self.session_path, 'blank', "*cam2*2_2_1.h5"))[0],
-					'{}_{}_hemo_blank'.format(self.date, self.mouse_id): glob2.glob(os.path.join(self.session_path, 'blank', "*cam1*2_2_1.h5"))[0],
-					}
+		if 'DoC' in self.sess.path:
+			movie_dict = {
+						'{}_{}_gcamp_doc'.format(self.date, self.mouse_id): glob2.glob(os.path.join(self.session_path, 'DoC', "*cam2*2_2_1.h5"))[0],
+						'{}_{}_hemo_doc'.format(self.date, self.mouse_id): glob2.glob(os.path.join(self.session_path, 'DoC', "*cam1*2_2_1.h5"))[0],
+						'{}_{}_gcamp_blank'.format(self.date, self.mouse_id): glob2.glob(os.path.join(self.session_path, 'blank', "*cam2*2_2_1.h5"))[0],
+						'{}_{}_hemo_blank'.format(self.date, self.mouse_id): glob2.glob(os.path.join(self.session_path, 'blank', "*cam1*2_2_1.h5"))[0],
+						}
+		else:
+			movie_dict = {'{}_{}_gcamp_doc'.format(self.date, self.mouse_id): glob2.glob(os.path.join(self.session_path, "*2_2_1.npy"))[0]}
+			self.f_num = glob2.glob(os.path.join(self.session_path, "*2_2_1.npy"))[0].split('JCamF')[1].split('_')[0]
+
 		self.movie_dict = movie_dict
 		return self.movie_dict
 
@@ -94,19 +100,22 @@ class FancyDataPackage(object):
 		
 	def xfer_del_files(self, location):
 		print 'xferring files'
-		shutil.copy2(glob2.glob(os.path.join(location, "*doc_matrix_df.csv"))[0], self.folder)
-		shutil.copy2(glob2.glob(os.path.join(location, "*blank_matrix_df.csv"))[0], self.folder)
-		shutil.copy2(glob2.glob(os.path.join(location, "*blank_hemo_movie_time*"))[0], self.folder)
-		shutil.copy2(glob2.glob(os.path.join(location, "*doc_hemo_movie_time*"))[0], self.folder)
+		shutil.copy2(glob2.glob(os.path.join(location, "**", "*doc_matrix_df.csv"))[0], self.folder)
+		shutil.copy2(glob2.glob(os.path.join(location, "**", "*dff_rolling_gaussian*"))[0], self.folder)
 		
-		shutil.copy2(glob2.glob(os.path.join(location, "DoC", "*cam2*16_16_1.h5"))[0], self.folder)
-		shutil.copy2(glob2.glob(os.path.join(location, "DoC", "*cam2*dff_rolling_gaussian.h5"))[0], self.folder)
-
-		shutil.copy2(glob2.glob(os.path.join(location, "DoC", "*JPhys*"))[0], os.path.join(self.folder, "{}JPhysdoc".format(self.date)))
-		shutil.copy2(glob2.glob(os.path.join(location, "blank", "*JPhys*"))[0], os.path.join(self.folder, "{}JPhysblank".format(self.date)))
+		if 'DoC' in self.sess.path:
+			shutil.copy2(glob2.glob(os.path.join(location, "*blank_matrix_df.csv"))[0], self.folder)
+			shutil.copy2(glob2.glob(os.path.join(location, "*blank_hemo_movie_time*"))[0], self.folder)
+			shutil.copy2(glob2.glob(os.path.join(location, "*doc_hemo_movie_time*"))[0], self.folder)
+			shutil.copy2(glob2.glob(os.path.join(location, "DoC", "*cam2*16_16_1.h5"))[0], self.folder)
+			shutil.copy2(glob2.glob(os.path.join(location, "DoC", "*JPhys*"))[0], os.path.join(self.folder, "{}JPhysdoc".format(self.date)))
+			shutil.copy2(glob2.glob(os.path.join(location, "blank", "*JPhys*"))[0], os.path.join(self.folder, "{}JPhysblank".format(self.date)))
+		else:
+			shutil.copy2(glob2.glob(os.path.join(location, "*16_16_1.npy"))[0], self.folder)
+			shutil.copy2(glob2.glob(os.path.join(location, "*JPhys{}".format(self.f_num)))[0], os.path.join(self.folder, "{}JPhysdoc".format(self.date)))
 
 		try:
-			shutil.copy2(glob2.glob(os.path.join(location, "**", "*WF_summary_figure.png"))[0], )
+			shutil.copy2(glob2.glob(os.path.join(location, "**", "*summary_figure.png"))[0], self.folder)
 			shutil.copy2(glob2.glob(os.path.join(location, "**", "*task=*.png"))[0], self.folder)
 		except:
 			pass

@@ -31,6 +31,8 @@ class FindIssues(object):
 			print("No such directory. Check your date", file = self.log)
 			sys.exit()
 
+		test_file = 
+
 		self.check_processed_files()
 		print('', file=self.log)
 		self.find_summary_figs()
@@ -45,24 +47,27 @@ class FindIssues(object):
 			print('Check on session {} for {}'.format(self.date, self.mouse))
 
 	def check_processed_files(self):
-		self.file_names=['*JCamF_cam2_200.dcimg_16-16-1_dff_rolling_gaussian.h5',
-							'*JCamF_cam2_200.dcimg_16_16_1.h5',
-							'*JPhysblank',
-							'*JPhysdoc',
-							'*blank_hemo_movie_timestamps.npy',
-							'*blank_matrix_df.csv',
-							'*doc_hemo_movie_timestamps.npy',
-							'*doc_matrix_df.csv',
-							'*gcamp_blank_cam2_256x256_tc1.h5',
-							'*gcamp_blank_cam2_256x256_tc5.h5',
-							'*gcamp_doc_cam2_256x256_tc1.h5',
-							'*gcamp_doc_cam2_256x256_tc5.h5',
-							'*gcamp_doc_still_frame.npy',
-							'*hemo_blank_cam1_256x256_tc1.h5',
-							'*hemo_doc_cam1_256x256_tc1.h5',
-							'*hemo_doc_still_frame.npy',
-							'*WF_summary_figure.png',
-							'*task=*.png']
+		self.file_names=['*dff_rolling_gaussian*',
+						'*summary_figure.png',
+						'*task=*.png',
+						'*gcamp_doc_cam2_256x256_tc1.h5',
+						'*gcamp_doc_cam2_256x256_tc5.h5',
+						'*gcamp_doc_still_frame.npy',
+						'*doc_matrix_df.csv',
+						'*JPhysdoc',
+						'*16_16_1.npy']
+		if some_condition:
+			self.file_names.pop(self.file_names.index('*16_16_1.npy'))
+			self.file_names.extend(['*JCamF_cam2_200.dcimg_16_16_1.h5',
+									'*JPhysblank',
+									'*blank_hemo_movie_timestamps.npy',
+									'*blank_matrix_df.csv',
+									'*doc_hemo_movie_timestamps.npy',
+									'*gcamp_blank_cam2_256x256_tc1.h5',
+									'*gcamp_blank_cam2_256x256_tc5.h5',
+									'*hemo_blank_cam1_256x256_tc1.h5',
+									'*hemo_doc_cam1_256x256_tc1.h5',
+									'*hemo_doc_still_frame.npy'])
 
 		files_dict = {}
 		for name in self.file_names:

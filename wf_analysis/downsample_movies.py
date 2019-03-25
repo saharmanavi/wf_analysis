@@ -7,6 +7,7 @@ import numpy as np
 import tables as tb
 import pdb
 from generate_dfs import AnalysisDataFrames
+from imaging_behavior.core.slicer import BinarySlicer
 
 class DownsampleMovies(object):
     def __init__(self, name_str, spatial_compression, temporal_compression, raw_movie_path, chunk_dir, final_dir=None, create=True, concat=True):
@@ -22,16 +23,19 @@ class DownsampleMovies(object):
             self.final_dir = self.chunk_dir
         self.local_dir = os.path.join(self.chunk_dir, "chunks_{}_tc{}".format(self.label, self.tc))
 
-        f = h5py.File(raw_movie_path, 'r+')
-        self.movie = f['data']
-        try:
-            self.save_one_frame()
-        except:
-            pass
+        if '.h5' in raw_movie_path:
+            f = h5py.File(raw_movie_path, 'r+')
+            self.movie = f['data']
+            self.movie_type = 'h5'
+            self.cam = os.path.split(raw_movie_path)[-1].split('CamF_')[1].split('_')[0]
+        elif '.npy' in raw_movie_path:
+            self.movie = BinarySlicer(raw_movie_path)
+            self.movie_type = 'npy'
+            self.cam = 'cam2'
         
+        self.save_one_frame()
         self.movie_len = self.movie.shape[0]
         self.movie_size = self.movie.shape[1]
-        self.cam = os.path.split(raw_movie_path)[-1].split('CamF_')[1].split('_')[0]
 
         if create==True:
             self.chunk_it()
@@ -39,10 +43,13 @@ class DownsampleMovies(object):
             self.concat_it()
 
     def save_one_frame(self, frame=30):
-        if ('doc' in self.label) and ('gcamp' in self.label):
-            still_frame = np.transpose(self.movie[frame,:,:], (1,0))
-        if ('doc' in self.label) and ('hemo' in self.label):
-            still_frame = np.rot90(self.movie[frame,:,:], 1)
+        if self.movie_type=='h5':
+            if ('doc' in self.label) and ('gcamp' in self.label):
+                still_frame = np.transpose(self.movie[frame,:,:], (1,0))
+            if ('doc' in self.label) and ('hemo' in self.label):
+                still_frame = np.rot90(self.movie[frame,:,:], 1)
+        if self.movie_type=='npy':
+            still_frame = self.movie[frame,:,:]
         self.still_frame = still_frame
         np.save(os.path.join(self.final_dir, '{}_still_frame.npy'.format(self.label)), self.still_frame)
         print '{} still image saved'.format(self.label)
@@ -111,9 +118,10 @@ class DownsampleMovies(object):
             start = frm*temporal_compression
             end = (frm+1)*temporal_compression
             data = ia[start:end, :height, :width]
-            data = np.transpose(data, (0, 2, 1))
-            if 'cam1' in self.cam:
-                data = np.flip(data, 1)
+            if self.movie_type=='h5':
+                data = np.transpose(data, (0, 2, 1))
+                if 'cam1' in self.cam:
+                    data = np.flip(data, 1)
 
             D = np.zeros((int(height*1./spatial_compression), int(width*1./spatial_compression)), dtype=np.float64)
             for ii in range(spatial_compression):
@@ -148,7 +156,7 @@ class DownsampleMovies(object):
                 end = length
 
             print "starting {}-{} chunk".format(start, end)
-            dset[start:end, :shape, :shape] = c.value
+            dset[start:end, :shape, :shape] = c[()]
             
             chunk.close()
             del c

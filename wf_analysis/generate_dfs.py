@@ -75,6 +75,7 @@ class AnalysisDataFrames(object):
 		for d in self.dates:
 			self.date = d
 			self.get_session_path()
+			self.get_movie_type()
 			self.generate_session_object()
 			self.generate_matrix()
 			if 'DoC' in self.path:
@@ -91,12 +92,18 @@ class AnalysisDataFrames(object):
 		print self.path
 		return self.path
 
+	def get_movie_type(self):
+		mov = glob2.glob(os.path.join(self.path, "*rolling_gaussian*"))[0]
+		movie_type = mov.split(".")[-1]
+		self.movie_type = ".{}".format(movie_type)
+		return self.movie_type
+
 	def generate_session_object(self):
 		try:
 			session = pd.read_pickle(glob2.glob(os.path.join(self.path, "*session_object.pkl"))[0])
 		
 		except:
-			manifest_path = ut.autoGenerateManifest(self.path)
+			manifest_path = ut.autoGenerateManifest(self.path, filetype=self.movie_type)
 			session = load_session_from_manifest(manifest_path)
 			pd.to_pickle(session, os.path.join(self.path, 
 									"{}_{}_session_object.pkl".format(self.date, self.mouse_id)))

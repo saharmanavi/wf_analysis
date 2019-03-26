@@ -9,9 +9,10 @@ import shutil
 
 
 class FindIssues(object):
-	def __init__(self, processed_folder):		
+	def __init__(self, processed_folder, data_type):		
 		self.profo = processed_folder
 		self.log = open(os.path.join(self.profo, "check_log.txt"), "w")
+		self.data_type = data_type
 
 		self.mouse = os.path.split(self.profo)[1].split('_')[1]
 		self.date = os.path.split(self.profo)[1].split('_')[0]
@@ -30,8 +31,6 @@ class FindIssues(object):
 		else:
 			print("No such directory. Check your date", file = self.log)
 			sys.exit()
-
-		test_file = 
 
 		self.check_processed_files()
 		print('', file=self.log)
@@ -56,7 +55,7 @@ class FindIssues(object):
 						'*doc_matrix_df.csv',
 						'*JPhysdoc',
 						'*16_16_1.npy']
-		if some_condition:
+		if self.data_type=='h5':
 			self.file_names.pop(self.file_names.index('*16_16_1.npy'))
 			self.file_names.extend(['*JCamF_cam2_200.dcimg_16_16_1.h5',
 									'*JPhysblank',
@@ -118,10 +117,10 @@ class FindIssues(object):
 		    	print('', file=self.log)
 	    		self.check_processed_files()
 
-if __name__ == "__main__":
-	# FindIssues(r"M:\M395926\180808_M395926")
+# if __name__ == "__main__":
+# 	FindIssues(r"C:\Users\saharm\Desktop\movie_folder\170126_M279793", data_type='npy')
 
-	for f in os.listdir(r"M:\M395926"):
-		FindIssues(os.path.join(r"M:\M395926", f))
+# 	# for f in os.listdir(r"M:\M395926"):
+# 	# 	FindIssues(os.path.join(r"M:\M395926", f))
 
 		

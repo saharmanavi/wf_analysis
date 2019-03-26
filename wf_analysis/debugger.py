@@ -38,6 +38,7 @@ class FindIssues(object):
 		print('', file=self.log)
 		self.check_movies()
 
+		self.check_processed_files()
 		for k in self.files_dict.keys():
 			print('{} : {}'.format(k, self.files_dict[k]), file=self.log)
 
@@ -45,7 +46,7 @@ class FindIssues(object):
 			sys.stdout = sys.__stdout__
 			print('Check on session {} for {}'.format(self.date, self.mouse))
 
-	def check_processed_files(self):
+	def check_processed_files(self, print_logs=True):
 		self.file_names=['*dff_rolling_gaussian*',
 						'*summary_figure.png',
 						'*task=*.png',
@@ -75,7 +76,8 @@ class FindIssues(object):
 				# print('{} '.format(name), file=self.log)
 			except IndexError:
 				files_dict[name] = np.nan
-				print('{} NOT found'.format(name), file=self.log)
+				if print_logs==True:
+					print('{} NOT found'.format(name), file=self.log)
 
 		self.files_dict = files_dict
 		return self.files_dict
@@ -88,7 +90,7 @@ class FindIssues(object):
 				for f in files:
 					shutil.copy2(f, self.profo)
 					print("transferring {} to processed folder".format(os.path.split(f)[1]), file=self.log)
-				self.check_processed_files()
+				self.check_processed_files(print_logs==False)
 				print('', file=self.log)
 
 	def check_movies(self):
@@ -114,8 +116,7 @@ class FindIssues(object):
 					del movie
 				except:
 					pass
-		    	print('', file=self.log)
-	    		self.check_processed_files()
+		    	self.check_processed_files(print_logs==False)
 
 # if __name__ == "__main__":
 # 	FindIssues(r"C:\Users\saharm\Desktop\movie_folder\170126_M279793", data_type='npy')

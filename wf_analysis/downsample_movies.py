@@ -33,7 +33,10 @@ class DownsampleMovies(object):
             self.movie_type = 'npy'
             self.cam = 'cam2'
         
-        self.save_one_frame()
+        try:
+            self.save_one_frame()
+        except UnboundLocalError:
+            pass
         self.movie_len = self.movie.shape[0]
         self.movie_size = self.movie.shape[1]
 

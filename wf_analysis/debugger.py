@@ -90,7 +90,7 @@ class FindIssues(object):
 				for f in files:
 					shutil.copy2(f, self.profo)
 					print("transferring {} to processed folder".format(os.path.split(f)[1]), file=self.log)
-				self.check_processed_files(print_logs==False)
+				self.check_processed_files(print_logs=False)
 				print('', file=self.log)
 
 	def check_movies(self):
@@ -116,7 +116,7 @@ class FindIssues(object):
 					del movie
 				except:
 					pass
-		    	self.check_processed_files(print_logs==False)
+		    	self.check_processed_files(print_logs=False)
 
 # if __name__ == "__main__":
 # 	FindIssues(r"C:\Users\saharm\Desktop\movie_folder\170126_M279793", data_type='npy')

@@ -38,9 +38,15 @@ class FindIssues(object):
 		print('', file=self.log)
 		self.check_movies()
 
+		print('', file=self.log)
 		self.check_processed_files()
 		for k in self.files_dict.keys():
 			print('{} : {}'.format(k, self.files_dict[k]), file=self.log)
+		print('', file=self.log)
+		print('atypical files:', file=self.log)
+		for f in os.listdir(self.profo):
+		    if (f not in self.dict_list) and ("log" not in f):
+		        print(f, file=self.log)
 
 		if pd.isnull(self.files_dict.values()).any():
 			sys.stdout = sys.__stdout__
@@ -79,8 +85,9 @@ class FindIssues(object):
 				if print_logs==True:
 					print('{} NOT found'.format(name), file=self.log)
 
+		self.dict_list = [files_dict[k].split("\\")[-1] for k in files_dict.keys() if pd.isnull(files_dict[k])==False]
 		self.files_dict = files_dict
-		return self.files_dict
+		return self.files_dict, self.dict_list
 
 	def find_summary_figs(self):
 		for k in self.files_dict.keys():

@@ -40,8 +40,10 @@ class FindIssues(object):
 
 		print('', file=self.log)
 		self.check_processed_files()
+		print('', file=self.log)
 		for k in self.files_dict.keys():
 			print('{} : {}'.format(k, self.files_dict[k]), file=self.log)
+		
 		print('', file=self.log)
 		print('atypical files:', file=self.log)
 		for f in os.listdir(self.profo):
@@ -79,7 +81,6 @@ class FindIssues(object):
 		for name in self.file_names:
 			try:
 				files_dict[name] = glob2.glob(os.path.join(self.profo, name))[0]
-				# print('{} '.format(name), file=self.log)
 			except IndexError:
 				files_dict[name] = np.nan
 				if print_logs==True:
@@ -98,16 +99,22 @@ class FindIssues(object):
 					shutil.copy2(f, self.profo)
 					print("transferring {} to processed folder".format(os.path.split(f)[1]), file=self.log)
 				self.check_processed_files(print_logs=False)
-				print('', file=self.log)
 
 	def check_movies(self):
+		movie_shapes = {'*gcamp_blank_cam2_256x256_tc1.h5': '(62000, 256, 256)',
+						'*gcamp_blank_cam2_256x256_tc5.h5': '(12400, 256, 256)',
+						'*hemo_blank_cam1_256x256_tc1.h5': '(31000, 256, 256)',
+						'*hemo_doc_cam1_256x256_tc1.h5': '(181000, 256, 256)',
+						'*gcamp_doc_cam2_256x256_tc1.h5': '(362000, 256, 256)',
+						'*gcamp_doc_cam2_256x256_tc5.h5': '(72400, 256, 256)',}
+
 		for k in self.files_dict.keys():
 			if ('.h5' in k) and ('dcimg_16' not in k):
 				try:
-					print('checking {}'.format(k), file=self.log)
+					print('{} should have shape {}'.format(k, movie_shape[k]), file=self.log)
 					a = h5py.File(self.files_dict[k], 'r+')
 					movie = a['data']
-					print("movie shape is {}".format(movie.shape), file=self.log)
+					print("actual movie shape is {}".format(movie.shape), file=self.log)
 					if 'hemo_doc_cam1_256x256_tc1' in k:
 						if pd.isnull(self.files_dict['*hemo_doc_still_frame.npy']):
 							print('creating hemo still_frame', file=self.log)

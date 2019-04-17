@@ -80,9 +80,15 @@ class AnalysisDataFrames(object):
 			self.generate_matrix()
 			if 'DoC' in self.path:
 				self.save_path = os.path.split(self.path)[0]
-				self.extract_hemo_timestamps()
-				self.generate_blank_matrix()
-				self.save_files(self.save_path)
+				try:
+					self.extract_hemo_timestamps()
+				except:
+					pass
+				try:
+					self.generate_blank_matrix()
+				except:
+					pass
+				
 
 	def get_session_path(self):
 		path = os.path.join(self.main_dir, self.manifest_dict[self.date], 'DoC')
@@ -233,6 +239,8 @@ class AnalysisDataFrames(object):
 		                              		test_fcn=lambda x: np.where(x>=1.5))
 		rt = ut.remove_vals_in_window(readtimes, .005)
 		self.doc_hemo_timestamps = rt
+		np.save(os.path.join(self.save_path, "{}_{}_doc_hemo_movie_timestamps.npy".format(self.date, self.mouse_id)),
+									self.doc_hemo_timestamps)
 		return self.doc_hemo_timestamps
 
 
@@ -305,18 +313,13 @@ class AnalysisDataFrames(object):
 		hemo_rt = ut.remove_vals_in_window(hemo_readtimes, .005)
 		self.blank_hemo_timestamps = hemo_rt
 		self.blank_matrix = matrix
-
-		return self.blank_matrix, self.blank_hemo_timestamps                           
-
-	def save_files(self, save_path):		
-		self.blank_matrix.to_csv(path_or_buf=os.path.join(save_path, 
+		
+		self.blank_matrix.to_csv(path_or_buf=os.path.join(self.save_path, 
 											"{}_{}_blank_matrix_df.csv".format(self.date, self.mouse_id)))
-		np.save(os.path.join(save_path, "{}_{}_blank_hemo_movie_timestamps.npy".format(self.date, self.mouse_id)),
+		np.save(os.path.join(self.save_path, "{}_{}_blank_hemo_movie_timestamps.npy".format(self.date, self.mouse_id)),
 											self.blank_hemo_timestamps)
-		np.save(os.path.join(save_path, "{}_{}_doc_hemo_movie_timestamps.npy".format(self.date, self.mouse_id)),
-									self.doc_hemo_timestamps)
-											
-
+		return self.blank_matrix, self.blank_hemo_timestamps                           
+		
 
 
 	# def generate_trial_df(self):
